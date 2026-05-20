@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi'
 import { categoryApi } from '../api/api'
-import { toast } from 'react-toastify'
+import { toast } from 'react-toastify'  
+
+// Sreenath guide me 
 
 function CategoryList() {
   const [categories, setCategories] = useState([])
