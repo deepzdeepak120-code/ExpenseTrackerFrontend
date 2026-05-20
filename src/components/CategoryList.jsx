@@ -4,7 +4,7 @@ import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi'
 import { categoryApi } from '../api/api'
 import { toast } from 'react-toastify'  
 
-// Sreenath guide me 
+// Sreenath is Teaching me 
 
 function CategoryList() {
   const [categories, setCategories] = useState([])
