@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { FiPlus, FiEdit2, FiTrash2 } from 'react-icons/fi'
 import { categoryApi } from '../api/api'
 import { toast } from 'react-toastify'  
+import { ICON_OPTIONS } from './CategoryForm'
 
 // Sreenath is Teaching me 
 
@@ -47,7 +48,8 @@ function CategoryList() {
     <div className="category-list-page">
       <div className="page-header">
         <div>
-          <h1>Categories</h1>
+          <h1>Categories
+          </h1>
           <p className="subtitle">{categories.length} categories</p>
         </div>
         <Link to="/categories/new" className="btn btn-primary">
@@ -65,14 +67,30 @@ function CategoryList() {
       ) : (
         <div className="category-grid">
           {categories.map(category => (
-            <div key={category.id} className="category-card">
-              <div
-                className="category-icon-large"
-                style={{ backgroundColor: category.color + '20' }}
-              >
-                <span style={{ fontSize: '2rem' }}>{category.icon}</span>  
-                
-              </div>
+            <div key={category.id} className="category-card"> 
+
+
+             <div
+  className="category-icon-large"
+  style={{ backgroundColor: category.color + '20' }}
+  >
+  {category.image ? (
+    <img
+      src={category.image}
+      alt={category.name}
+      style={{ width: '3rem', height: '3rem', objectFit: 'cover', borderRadius: 8 }}
+    />
+  ) : (
+    (() => {
+      const Icon = ICON_OPTIONS[category.icon]
+      return Icon
+        ? <Icon size={32} />
+        : <span style={{ fontSize: '2rem' }}>{category.icon}</span>
+    })()
+  )}
+   </div> 
+
+
               <h3>{category.name}</h3>
               <div
                 className="color-preview"

@@ -10,7 +10,7 @@ import{CgGym} from'react-icons/cg'
 import { categoryApi } from '../api/api'
 import { toast } from 'react-toastify' 
 
-const ICON_OPTIONS = {
+export const ICON_OPTIONS = {
   FiShoppingBag: FiShoppingBag,
   FiTruck: FiTruck,
   FiShoppingCart: FiShoppingCart,
@@ -30,7 +30,38 @@ const ICON_OPTIONS = {
   CgGym: CgGym
 }
 const COLOR_OPTIONS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#DDA0DD', '#98D8C8', '#F7DC6F', '#BDC3C7', '#6366f1', '#ec4899']
+const MAX_DIM = 200
+const WARN_BYTES = 500 * 1024   // ~500 KB
 
+function resizeImageToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const img = new Image()
+      img.onload = () => {
+        // scale down keeping aspect ratio
+        let { width, height } = img
+        if (width > height && width > MAX_DIM) {
+          height = Math.round((height * MAX_DIM) / width)
+          width = MAX_DIM
+        } else if (height > MAX_DIM) {
+          width = Math.round((width * MAX_DIM) / height)
+          height = MAX_DIM
+        }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        // PNG keeps transparency; use 'image/jpeg', 0.8 for smaller files
+        resolve(canvas.toDataURL('image/jpeg', 0.8))
+      }
+      img.onerror = reject
+      img.src = e.target.result           // the data URI from readAsDataURL
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)             // requirement #1
+  })
+}
 function CategoryForm() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -39,7 +70,8 @@ function CategoryForm() {
   const [formData, setFormData] = useState({
     name: '',
     icon: 'FiPackage',
-    color: '#6366f1'
+    color: '#6366f1',
+    image :null
   })
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState({})
@@ -57,7 +89,8 @@ function CategoryForm() {
       setFormData({
         name: category.name,
         icon: category.icon || 'FiPackage',
-        color: category.color || '#6366f1'
+        color: category.color || '#6366f1',
+        image : category.image|| null
       })
     } catch (error) {
       toast.error('Failed to load category')
@@ -66,7 +99,20 @@ function CategoryForm() {
       setLoading(false)
     }
   }
-
+const handleImageChange = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  try {
+    const dataUrl = await resizeImageToDataUrl(file)
+    // base64 payload size ≈ length of the string in bytes
+    if (dataUrl.length > WARN_BYTES) {
+      toast.warn('Image is over ~500 KB even after resizing — consider a smaller one')
+    }
+    setFormData(prev => ({ ...prev, image: dataUrl }))
+  } catch {
+    toast.error('Could not process that image')
+  }
+}
   const validateForm = () => {
     const newErrors = {}
     if (!formData.name.trim()) newErrors.name = 'Name is required'
@@ -105,7 +151,7 @@ function CategoryForm() {
             <label htmlFor="name">Name *</label>
             <input
               type="text"
-              id="name"
+              id="name" 
               name="name"
               value={formData.name}
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
@@ -150,7 +196,36 @@ function CategoryForm() {
               onChange={(e) => setFormData(prev => ({ ...prev, color: e.target.value }))}
               className="color-input"
             />
-          </div>
+          </div>  
+
+          <div className="form-group">
+  <label htmlFor="image">Image (optional)</label>
+  <input
+    type="file"
+    id="image"
+    accept="image/*"
+    onChange={handleImageChange}
+  />
+  {formData.image && (
+    <div className="image-preview">
+      <img
+        src={formData.image}
+        alt="Preview"
+        style={{ width: 80, height: 80, objectFit: 'cover', borderRadius: 8, marginTop: 8 }}
+      />
+      <button
+        type="button"
+        className="btn btn-icon btn-danger"
+        onClick={() => setFormData(prev => ({ ...prev, image: null }))}
+      >
+        Remove
+      </button>
+    </div>
+  )}
+</div>
+
+
+
 
           <div className="preview-box">
             <p>Preview:</p>
